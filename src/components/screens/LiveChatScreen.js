@@ -73,7 +73,7 @@ export default class LiveChatScreen extends Component {
       await this.authCheckHandler(); //User Authentication Check
       //Screen Model Logic     
       this.getChatMessages();
-      setInterval(() => {
+      this._interval = setInterval(() => {
         // Your code
         this.getChatMessages();
         //this.getChatroomUsers;
@@ -82,7 +82,7 @@ export default class LiveChatScreen extends Component {
   }
 
   componentWillUnmount() {
-    //clearInterval(this._interval);
+    clearInterval(this._interval);
   }
 
   async sendMessage() {
@@ -135,6 +135,8 @@ export default class LiveChatScreen extends Component {
       chatsFormData.append('UserAppVersion', '1.0');
       chatsFormData.append('action', 'display_chat');
       chatsFormData.append('lastmessageid', this.state.lastmessageid);
+      chatsFormData.append('mobileapp', 'yes');
+      try {
       fetch('https://mylagosapp.mobi/mercyland/api/livechat', {
            method: 'POST',
            headers: {
@@ -147,6 +149,10 @@ export default class LiveChatScreen extends Component {
       .then((responseData) => {
                 this.setState({ 'messages': responseData });
       }).done();
+      } catch (error) {
+        console.warn(error);
+        throw error;
+      }
   };
 
   /**getChatroomUsers = () => {
@@ -157,6 +163,7 @@ export default class LiveChatScreen extends Component {
       formData.append('UserDEVICE', '');
       formData.append('UserAppVersion', '1.0');
       formData.append('action', 'online_users');
+      try {
       fetch('https://mylagosapp.mobi/mercyland/api/livechat', {
            method: 'POST',
            headers: {
@@ -171,6 +178,10 @@ export default class LiveChatScreen extends Component {
       .then((responseData) => {
                 this.setState({ onlineusers: responseData });
       }).done();
+      } catch (error) {
+        console.warn(error);
+        throw error;
+      }
   };**/
 
   renderItem = ({ item }) => {
@@ -180,6 +191,7 @@ export default class LiveChatScreen extends Component {
         <View style={styles.rowText}>
           <Text style={styles.sender}>{item.userName}</Text>
           <Text style={styles.message}>{item.chatMessage}</Text>
+          <Text style={styles.datetime}>{item.time_ago}</Text>
         </View>
       </View>
     );
@@ -205,7 +217,7 @@ export default class LiveChatScreen extends Component {
               onContentSizeChange={() => this.flatList.scrollToEnd({animated: true})}
               onLayout={() => this.flatList.scrollToEnd({animated: true})}
               //keyExtractor={this._keyExtractor} 
-              inverted  
+              //inverted  
              /> 
              <KeyboardAvoidingView behavior="padding">
              <View style={styles.footer}>
@@ -248,6 +260,10 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 18,
+    color: 'black',
+  },
+  datetime: {
+    fontSize: 14,
     color: 'black',
   },
   sender: {

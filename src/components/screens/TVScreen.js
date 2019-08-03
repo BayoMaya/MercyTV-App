@@ -12,6 +12,7 @@ import {
 import AsyncStorage from '@react-native-community/async-storage';
 
 import Video from 'react-native-video';
+import { NodePlayerView } from 'react-native-nodemediaclient';
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -70,14 +71,22 @@ export default class TVScreen extends Component {
       //this.makeRemoteRequest(); 
   }
 
+  async componentWillUnmount() {
+    this.vp.stop();
+  }
+
   render() {
     return (
-            <View style={styles.container}>
-                <Video source={{uri: "blob:https://www.commec.co.za/961d1ab3-5f38-4dba-b3cb-bdd15d0b17a9"}}       // Can be a URL or a local file.
-                  ref={(ref) => { this.player = ref }}    // Store reference
-                  //onBuffer={this.onBuffer}              // Callback when remote video is buffering
-                  //onError={this.videoError}             // Callback when video cannot be loaded
-                  style={styles.backgroundVideo} />
+            <View style={styles.container} > 
+                <NodePlayerView 
+                  style={styles.backgroundVideo}
+                  ref={(vp) => { this.vp = vp }}
+                  inputUrl={"https://mn-nl.mncdn.com/ezcdn_3WIgfCOhdE85/3WIgfCOhdE85_1/playlist.m3u8"}
+                  scaleMode={"ScaleAspectFit"}
+                  bufferTime={300}
+                  maxBufferTime={1000}
+                  autoplay={true} 
+                /> 
             </View>
     );
   }
@@ -90,6 +99,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  paragraph: {
+    margin: 24,
+    marginTop: 0,
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#000',
   },
   backgroundVideo: {
     position: 'absolute',

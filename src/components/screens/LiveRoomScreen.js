@@ -15,18 +15,22 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 
-import TwilioVoice from 'react-native-twilio-programmable-voice';
-import { OTSession, OTPublisher, OTSubscriber } from 'opentok-react-native';
-import type { Ref } from 'react';
+import { NodePlayerView, NodeCameraView } from 'react-native-nodemediaclient';
+import { Stopwatch, Timer } from 'react-native-stopwatch-timer';
 
-import LogoHeader from '../LogoHeader';
-//import { Icon } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const openToxApiKey = '46344052';
-const opentoksessionId = '1_MX40NjM0NDA1Mn5-MTU2MDE2MzI1OTIzMX5VNDJqblpZTnA3SjFqVUZiTkpKbXR5MWZ-UH4';
-const opentokcodetoken = 'T1==cGFydG5lcl9pZD00NjM0NDA1MiZzaWc9N2VhYTQ4MGU0Yjk2N2IxNWNhYjYwZjhhNWZlY2U5YjRiODA5OTQ4OTpzZXNzaW9uX2lkPTFfTVg0ME5qTTBOREExTW41LU1UVTJNREUyTXpJMU9USXpNWDVWTkRKcWJscFpUbkEzU2pGcVZVWmlUa3BLYlhSNU1XWi1VSDQmY3JlYXRlX3RpbWU9MTU2MzI0MTkwNCZyb2xlPXB1Ymxpc2hlciZub25jZT0xNTYzMjQxOTA0LjQxNzM2MDE5Mzc0JmluaXRpYWxfbGF5b3V0X2NsYXNzX2xpc3Q9';
-const twiliocodetoken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzY29wZSI6InNjb3BlOmNsaWVudDpvdXRnb2luZz9hcHBTaWQ9QVBmNjRjNzAwMDE4ZmI0YTU0YjI5NDVhYmQyZWU4ZTczOCZhcHBQYXJhbXM9JmNsaWVudE5hbWU9UHJvcGhldEplcmVtaWFoT21vdG9GdWZleWluIHNjb3BlOmNsaWVudDppbmNvbWluZz9jbGllbnROYW1lPVByb3BoZXRKZXJlbWlhaE9tb3RvRnVmZXlpbiIsImlzcyI6IkFDN2YyMzUyODUxNmZhZTc3MzMzNTQzNDY4ZWFjNjQ3MWEiLCJleHAiOjE1NjMyNDgwNjh9.8TM-PrSPxt7Sx93CWQbrM6sqUegyMN8U_n7mKQoCLLY';
+const settings = {
+  camera: { cameraId: 1, cameraFrontMirror: true },
+  audio: { bitrate: 32000, profile: 1, samplerate: 44100 },
+  video: {
+    preset: 24,
+    bitrate: 400000,
+    profile: 2,
+    fps: 30,
+    videoFrontMirror: true
+  }
+};
 
 export default class LiveRoomScreen extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -47,12 +51,17 @@ export default class LiveRoomScreen extends Component {
       userData: '',
       loginToken: '',
       loading: true,
-      openToxApiKey: '46344052', //OpenTox
-      openToxSessionId: '1_MX40NjM0NDA1Mn5-MTU2MDE2MzI1OTIzMX5VNDJqblpZTnA3SjFqVUZiTkpKbXR5MWZ-UH4', //OpenTox
-      openToxToken: 'T1==cGFydG5lcl9pZD00NjM0NDA1MiZzaWc9N2VhYTQ4MGU0Yjk2N2IxNWNhYjYwZjhhNWZlY2U5YjRiODA5OTQ4OTpzZXNzaW9uX2lkPTFfTVg0ME5qTTBOREExTW41LU1UVTJNREUyTXpJMU9USXpNWDVWTkRKcWJscFpUbkEzU2pGcVZVWmlUa3BLYlhSNU1XWi1VSDQmY3JlYXRlX3RpbWU9MTU2MzI0MTkwNCZyb2xlPXB1Ymxpc2hlciZub25jZT0xNTYzMjQxOTA0LjQxNzM2MDE5Mzc0JmluaXRpYWxfbGF5b3V0X2NsYXNzX2xpc3Q9', //OpenTox
-      twilioToken: '', //Twilio
-      twilioStatus: 'Loading', //Twilio
+      isPublishing: false,
+      isPublish: false,
+      publishBtnTitle: 'Start Publish',
+      publishingState: false,
+      hasPermission: false,
+      flashenable: false,
+      isStopwatchStart: false,
+      resetStopwatch: false,
     };
+    this.startStopStopWatch = this.startStopStopWatch.bind(this);
+    this.resetStopwatch = this.resetStopwatch.bind(this);
   }
 
   _bootstrapAsync = async () => {
@@ -81,168 +90,120 @@ export default class LiveRoomScreen extends Component {
       }
   }
 
-  async componentWillMount() {
-
-  }
-
   async componentDidMount(){
       await this.authCheckHandler(); //User Authentication Check
-      //Screen Model Logic                 
-      //this.makeRemoteRequest(); 
-      this.initTwilio();
+      //Screen Model Logic          
+      this.checkPermissions();       
   }
 
-  initTwilio = async () => {
-    if (Platform.OS === 'android') {
-        await this.checkMicrophonePermission();
-    }
-    await TwilioVoice.initWithToken(twiliocodetoken);
-    TwilioVoice.addEventListener('deviceReady', () => {
-        alert("Twilio connected");
-        this.setState({ 'twilioStatus': "Ready" });
-    });
-    if (Platform.OS === 'ios') { //required for ios
-        TwilioVoice.configureCallKit({
-            appName: 'MercyTV',
-        });
-    }
-    TwilioVoice.addEventListener('deviceNotReady', function(data) {
-       //Not connected
-       alert(data);
-       this.setState({ twilioStatus: "Error connecting" });
-    });
-    TwilioVoice.addEventListener('callRejected', function(data) {
-      // Call rejected
-      this.setState({ twilioStatus: "Call rejected" });
-    });
-    TwilioVoice.addEventListener('deviceDidReceiveIncoming', function(data) {
-      // Incoming calls
-      this.setState({ twilioStatus: "Incoming call" });
-    });
-      // to catch incoming call when the app was in the background
-    TwilioVoice.getActiveCall()
-      .then(incomingCall => {
-      if (incomingCall){
-        _deviceDidReceiveIncoming(incomingCall);
-      }
-    });
-  };
-
-  handleMakeCall=async()=>{
-      // start a call
-      TwilioVoice.connect({To: ''});
+  async componentWillUnmount() {
+    //this.vb.stop();
   }
 
-  handleStopCall=async()=>{
-      // end a call
-      TwilioVoice.disconnect();
-  }
-
-  handleAcceptCall=async()=>{
-      // accept incoming call
-      TwilioVoice.accept();
-  }
-
-  handleRejectCall=async()=>{
-      // reject a call
-      TwilioVoice.reject();
-  }
-
-  handleIgnoreCall=async()=>{
-      // ignore a call
-      TwilioVoice.ignore();
-  }
-
-  makeRemoteRequest = () => {
-      try{ 
-      const formData = new FormData();
-      formData.append('UserID', this.state.userID);
-      formData.append('UserName', this.state.userName);
-      formData.append('UserTOKEN', this.state.loginToken);
-      formData.append('UserDEVICE', '');
-      formData.append('UserAppVersion', '1.0');
-      fetch('https://mylagosapp.mobi/mercyland/api/account_mediaaccesstoken', {
-           method: 'POST',
-           headers: {
-           Accept: 'application/json',
-           'Content-Type': 'multipart/form-data'
-           },
-           body: formData
-      })
-      .then((response) => response.json())
-      .then((responseData) => {
-                //this.initTelephony.bind(this);
-                async()=>{
-                await TwilioVoice.initWithToken(responseData.twiliotoken);
-                await OpenTok.setApiKey('46344052');
-                await OpenTok.connect('1_MX40NjM0NDA1Mn5-MTU2MDE2MzI1OTIzMX5VNDJqblpZTnA3SjFqVUZiTkpKbXR5MWZ-UH4', responseData.opentoktoken);
-                OpenTok.on(OpenTok.events.ON_SIGNAL_RECEIVED, e => alert(e));
-
-                TwilioVoice.addEventListener('deviceReady', function() {
-                  //Connected
-                  alert("Twilio ready");
-                  this.setState({ twilioStatus: "Ready" });
-                });
-                this.setState({ 'loading': false }); //Loaded, Now render
-                this.setState({ 'openToxToken': responseData.opentoktoken });
-                this.setState({ 'twilioToken': responseData.twiliotoken });
-                }
-      }).done();
-      } catch (error) {
-          alert("Connection to server failed");
-      }  
-  };
-
-  async requestMicrophonePermission() {
+  checkPermissions = async () => {
+    console.log("Checking Permissions Android");
     try {
-      const granted = await PermissionsAndroid.request(
+      const granted = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.CAMERA,
         PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-        {
-          'title': 'Microphone Permission',
-          'message': 'App needs access to you microphone ' +
-                     'so you can talk with other users.'
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+      ]);
+      let hasAllPermissions = true;
+      Object.keys(granted).forEach(key => {
+        // key: the name of the object key
+        // index: the ordinal position of the key within the object
+        if (granted[key] !== "granted") {
+          console.log("Does not have permission for: ", granted[key]);
+          hasAllPermissions = false;
         }
-      )
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log("You can use the microphone")
-      } else {
-        console.log("Microphone permission denied")
-      }
+      });
+      console.log("hasAllPermissions: ", hasAllPermissions);
+      this.setState({ hasPermission: hasAllPermissions });
     } catch (err) {
-      console.warn(err)
+      console.warn(err);
     }
+  };
+
+  onPressPublishBtn = async () => {
+    const { isPublishing: publishingState, hasPermission } = this.state;
+    if (Platform.OS === "android") {
+      if (!hasPermission) {
+        this.checkPermissions();
+        return;
+      }
+    }
+
+    if (publishingState) {
+      this.vb.stop();
+    } else {
+      this.vb.start();
+    }
+
+    this.setState({ isPublishing: !publishingState });
+  };
+
+  startStopStopWatch() {
+    this.setState({isStopwatchStart: !this.state.isStopwatchStart, resetStopwatch: false});
+  }
+  resetStopwatch() {
+    this.setState({isStopwatchStart: false, resetStopwatch: true});
   }
 
-  checkMicrophonePermission(){
-    PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO).then((result)=>{
-      if(!result){
-        this.requestMicrophonePermission();
-      }
-    });
+  getFormattedTime(time) {
+      this.currentTime = time;
   }
 
   render() {
-    //if(this.state.loading){
-    //      return(
-    //        <View style={styles.container}>
-    //          <ActivityIndicator size="large" color="#0000ff" />
-    //        </View>
-    //      )
-    //}
+    if(this.state.userID == '1' || this.state.userID == '2'){
     return (
-      <View style={styles.container}>
-        <View style={{ flex: 2, alignItems: 'stretch', flexDirection: 'column' }}>
-          <OTSession apiKey={openToxApiKey} sessionId={opentoksessionId} token={opentokcodetoken}>
-            <OTPublisher style={{ width: 100, height: 200 }} />
-            <OTSubscriber style={{ width: 100, height: 200 }} />
-          </OTSession>
-        </View>
-        //<View style={styles.footer}>
-        //  <Text style={styles.paragraph}>{this.state.twilioStatus}</Text>
-        //  <Button title="Call" onPress={this.handleMakeCall} />
-        //  <Button title="Hang Up" onPress={this.handleStopCall} />
-        //</View>
-      </View>
+    <View style={styles.container} >  
+      <NodeCameraView 
+        style={{ height: 400, flex: 1 }}
+        ref={(vb) => { this.vb = vb }}
+        outputUrl = {"rtmp://live.mux.com/app/73e2fab0-376f-6a55-976b-b3e71d27b7d0"}
+        camera={{ cameraId: 1, cameraFrontMirror: true }}
+        audio={{ bitrate: 32000, profile: 1, samplerate: 44100 }}
+        video={{ preset: 12, bitrate: 400000, profile: 1, fps: 15, videoFrontMirror: false }}
+        autopreview={true} 
+      /> 
+      <Stopwatch laps msecs 
+            start={this.state.isStopwatchStart} //To start
+            reset={this.state.resetStopwatch} //To reset
+            options={timerOptions} //options for the styling
+            getTime={this.getFormattedTime} 
+      />
+      <Button  
+        onPress={() => {
+          if (this.state.isPublish) {
+              this.setState({ publishBtnTitle: 'Start Publish', isPublish: false });
+              this.setState({isStopwatchStart: false, resetStopwatch: true});
+              this.vb.stop(); 
+          } else {
+              this.setState({ publishBtnTitle: 'Stop Publish', isPublish: true });
+              this.setState({isStopwatchStart: true, resetStopwatch: false});
+              this.vb.start(); this.startStopStopWatch;
+          }
+        }}
+        title={this.state.publishBtnTitle}
+        color="#841584" 
+      /> 
+      <Button title="Reverse Camera" onPress={() => { this.vb.switchCamera(); this.state.flashenable = false; color="#FF538F"}} />
+      <Button title="Switch Flashlight" onPress={() => { this.state.flashenable = !this.state.flashenable; this.vb.flashEnable(this.state.flashenable); }} />
+    </View>
+    );
+    }
+    return (
+            <View style={styles.container} > 
+                <NodePlayerView 
+                  style={{ height: 200 }}
+                  ref={(vp) => { this.vp = vp }}
+                  inputUrl={"https://stream.mux.com/X6j6XwDfFGdC1Z21q2JEZfex00cOJFP1B.m3u8"}
+                  scaleMode={"ScaleAspectFit"}
+                  bufferTime={300}
+                  maxBufferTime={1000}
+                  autoplay={true} 
+                /> 
+            </View>
     );
   }
 }
@@ -250,16 +211,54 @@ export default class LiveRoomScreen extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
+    justifyContent: "center"
   },
-  //footer: {
-  //  flex: 1,
-  //  flexDirection: 'column',
-  //  alignItems: 'center'
-  //},
-  //paragraph: {
-  //  fontSize: 18,
-  //  color: 'black',
-  //  alignItems: 'center'
-  //},
+  text: {
+    fontSize: 17,
+    color: '#FF538F',
+  },
+  /**nodePlayerView: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0
+  },
+  nodeCameraView: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0
+  },
+  playBtn: {
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+    backgroundColor: "#333",
+    borderColor: "#333",
+    borderWidth: 3,
+    borderRadius: 2,
+    height: 50,
+    width: deviceWidth / 2,
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    elevation: 4,
+    marginVertical: 10
+  }**/
 });
+
+const timerOptions = {
+  container: {
+    backgroundColor: '#000',
+    padding: 5,
+    borderRadius: 5,
+    width: 220,
+  },
+  text: {
+    fontSize: 30,
+    color: '#FFF',
+    marginLeft: 7,
+  }
+};

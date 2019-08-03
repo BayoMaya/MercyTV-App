@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, StatusBar }   from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Dimensions, StatusBar }   from 'react-native';
 import { createStackNavigator,
   createBottomTabNavigator,
   createDrawerNavigator,
@@ -28,9 +28,9 @@ import TVScreen from './TVScreen';
 //Step One - Tab Navigator 
 const RoomTabs = createBottomTabNavigator(
   {
-    LiveRoom: {screen: LiveRoomScreen},
-    LiveChat: {screen: LiveChatScreen},
-    Details: {screen: LiveRoomDetailsScreen},
+    LiveRoom: {screen: LiveRoomScreen, navigationOptions: {tabBarLabel:"Live Room", tabBarIcon: ({ tintColor }) => (<Icon name="camcorder" size={20}/>)}, },
+    LiveChat: {screen: LiveChatScreen, navigationOptions: {tabBarLabel:"Live Chat", tabBarIcon: ({ tintColor }) => (<Icon name="chat" size={20}/>)}, },
+    Details: {screen: LiveRoomDetailsScreen, navigationOptions: {tabBarLabel:"Details", tabBarIcon: ({ tintColor }) => (<Icon name="information" size={20}/>)}, },
   }, 
   {  
     navigationOptions: ({ navigation }) => ({
@@ -38,27 +38,30 @@ const RoomTabs = createBottomTabNavigator(
         const { routeName } = navigation.state;
         let iconName;
         if (routeName === 'LiveRoom') {
-          iconName = `podcast${focused ? '' : '-outline'}`;
+          iconName = `camcorder${focused ? '' : '-outline'}`;
         } else if (routeName === 'LiveChat') {
-          iconName = `md-chatboxes${focused ? '' : '-outline'}`;
+          iconName = `chat${focused ? '' : '-outline'}`;
         } else if (routeName === 'Details') {
-          iconName = `md-information-circle${focused ? '' : '-outline'}`;
+          iconName = `information${focused ? '' : '-outline'}`;
         }
         // You can return any component that you like here! We usually use an
         // icon component from react-native-vector-icons
         return <Icon name={iconName} size={horizontal ? 20 : 25} color={tintColor} />;
       },
     }),
+    tabBarPosition: 'bottom',
     tabBarOptions: {
+      showLabel: true,
+      showIcon: true,
       activeTintColor: '#FF538F',
       activeBackgroundColor: '#FFFFFF',
       inactiveTintColor: '#FFFFFF',
-      inactiveBackgroundColor: '#000000',
+      inactiveBackgroundColor: '#cccccc',
       labelStyle: {
         fontSize: 12,
       },
       style: {
-        backgroundColor: 'black',
+        backgroundColor: '#cccccc',
       },
     }
   }
@@ -200,14 +203,14 @@ const Logout_StackNavigator = createStackNavigator(
 //Step Three - Drawer Navigator
 const DrawerNavigator = createDrawerNavigator(
   {
-    Home: {screen: Home_StackNavigator, navigationOptions: {drawerLabel: "Dashboard"}},
-    LiveRoomTabs: {screen: LiveRoom_StackNavigator, navigationOptions: {drawerLabel: "Live Room"}},
-    Payments: {screen: Payments_StackNavigator, navigationOptions: {drawerLabel: "Payments"}},
-    Settings: {screen: Settings_StackNavigator, navigationOptions: {drawerLabel: "Account Settings"}},
-    Notifications: {screen: Notifications_StackNavigator, navigationOptions: {drawerLabel: "Notifications"}},
-    TV: {screen: TV_StackNavigator, navigationOptions: {drawerLabel: "Mercy TV"}},
-    About: {screen: About_StackNavigator, navigationOptions: {drawerLabel: "About"}},
-    Logout: {screen: Logout_StackNavigator, navigationOptions: {drawerLabel: "Logout"}},
+    Home: {screen: Home_StackNavigator, navigationOptions: {drawerLabel: "Dashboard", drawerIcon: ({ tintColor }) => (<Icon name="home" size={20}/>)}},
+    LiveRoomTabs: {screen: LiveRoom_StackNavigator, navigationOptions: {drawerLabel: "Live Room", drawerIcon: ({ tintColor }) => (<Icon name="podcast" size={20}/>)}},
+    Payments: {screen: Payments_StackNavigator, navigationOptions: {drawerLabel: "Payments", drawerIcon: ({ tintColor }) => (<Icon name="cash" size={20}/>)}},
+    Settings: {screen: Settings_StackNavigator, navigationOptions: {drawerLabel: "Account Settings", drawerIcon: ({ tintColor }) => (<Icon name="settings-outline" size={20}/>)}},
+    Notifications: {screen: Notifications_StackNavigator, navigationOptions: {drawerLabel: "Notifications", drawerIcon: ({ tintColor }) => (<Icon name="bell-alert" size={20}/>)}},
+    TV: {screen: TV_StackNavigator, navigationOptions: {drawerLabel: "Mercy TV", drawerIcon: ({ tintColor }) => (<Icon name="television" size={20}/>)}},
+    About: {screen: About_StackNavigator, navigationOptions: {drawerLabel: "About", drawerIcon: ({ tintColor }) => (<Icon name="information" size={20}/>)}},
+    Logout: {screen: Logout_StackNavigator, navigationOptions: {drawerLabel: "Logout", drawerIcon: ({ tintColor }) => (<Icon name="lock" size={20}/>)}},
   },
   {
     initialRouteName: 'Home',

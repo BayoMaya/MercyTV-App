@@ -1,11 +1,17 @@
 import React from 'react';
-import { StyleSheet, Text, View, ActivityIndicator, Button, Keyboard, StatusBar } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, Button, Keyboard, Dimensions, ImageBackground, StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 
 export default class Initializing extends React.Component {
-  constructor(props) {
-      super(props);
+  //constructor(props){
+  //      super(props);
+  //      this._bootstrapAsync();
+  //}
+
+  componentDidMount() {
+    setTimeout(() => {
       this._bootstrapAsync();
+    }, 5000);
   }
 
     // Fetch the token from storage then navigate to our appropriate place
@@ -27,8 +33,8 @@ export default class Initializing extends React.Component {
   render() {
     return (
       <View>
-        <ActivityIndicator />
-        <StatusBar barStyle="default" />
+        <ImageBackground style={{width: '100%', height: '100%'}} source={require('./assets/launch_screen.png')}>
+        </ImageBackground>
       </View>
     );
   }

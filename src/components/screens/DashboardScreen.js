@@ -10,6 +10,7 @@ import {
   BackHandler,
   ImageBackground,
   ActivityIndicator,
+  Dimensions,
   Keyboard,
 } from 'react-native';
 
@@ -87,7 +88,7 @@ export default class DashboardScreen extends React.Component {
         </View>
         <View style={styles.footer}>
           <Text style={styles.textsubtitle}>NEXT SESSION </Text>
-          <Text style={styles.textparagraph}>24 July, 2019. 8:40 pm</Text>
+          <Text style={styles.textparagraph}>24 August, 2019. 8:40 pm</Text>
         </View>
       </ImageBackground>
       </View>

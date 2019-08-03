@@ -78,6 +78,7 @@ export default class AboutScreen extends Component {
       formData.append('UserTOKEN', this.state.loginToken);
       formData.append('UserDEVICE', '');
       formData.append('UserAppVersion', '1.0');
+      try {
       fetch('https://mylagosapp.mobi/mercyland/api/about', {
            method: 'POST',
            headers: {
@@ -96,6 +97,10 @@ export default class AboutScreen extends Component {
                 alert("Error occurred accessing the server. Please try again");
             }
       }).done();
+      } catch (error) {
+        console.warn(error);
+        //throw error;
+      }
   };
 
   render() {

@@ -13,7 +13,7 @@ import {
 import AsyncStorage from '@react-native-community/async-storage';
 
 import LogoHeader from '../LogoHeader';
-import { List, ListItem } from 'react-native-elements';
+import { SearchBar, List, ListItem } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default class PaymentsScreen extends Component {
@@ -29,6 +29,7 @@ export default class PaymentsScreen extends Component {
   constructor(props) {
     super(props);
     this._bootstrapAsync();
+    this.arrayholder = [];
     this.state = {
       userID: '',
       userName: '',
@@ -79,6 +80,7 @@ export default class PaymentsScreen extends Component {
       formData.append('UserTOKEN', this.state.loginToken);
       formData.append('UserDEVICE', '');
       formData.append('UserAppVersion', '1.0');
+      try {
       fetch('https://mylagosapp.mobi/mercyland/api/payments', {
            method: 'POST',
            headers: {
@@ -92,24 +94,58 @@ export default class PaymentsScreen extends Component {
       .then((response) => response.json())
       .then((responseData) => {
                 this.setState({ 'data': responseData });
+                this.arrayholder = responseData;   
                 this.setState({ loading: false });
       }).done();
+      } catch (error) {
+        console.warn(error);
+        //throw error;
+        this.setState({ loading: false });
+      }
+  };
+
+  searchFilterFunction = text => {    
+    const newData = this.arrayholder.filter(item => {      
+      const itemData = `${item.title.toUpperCase()} ${item.details.toUpperCase()}`;
+    
+      const textData = text.toUpperCase();
+      
+      return itemData.indexOf(textData) > -1;    
+    });
+    this.setState({ data: newData });  
   };
 
   renderHeader = () => {
-    return <SearchBar placeholder="Type Here..." lightTheme round />;
+    return (
+           <SearchBar placeholder="Type Here..." 
+             lightTheme 
+             round
+             onChangeText={text => this.searchFilterFunction(text)}
+             autoCorrect={false}  
+           />
+    );  
   };
 
-  renderItem({item}) {
+  renderListEmptyComponent = () => {
     return (
-      <ListItem
-            roundAvatar
-            title={`${item.title} ${item.date}`}
-            subtitle={item.details}
-            avatar={{ uri: item.thumbnail }}
-      />
+      <View style={styles.row}>
+          <Text style={styles.details}>No data available</Text>
+      </View>
     );
-  }
+  };
+
+  renderItem = ({ item }) => {
+    return (
+      <View style={styles.row}>
+        <Image style={styles.thumbnail} source={{ uri: item.photo }} />
+        <View style={styles.rowText}>
+          <Text style={styles.title}>{item.title}</Text>
+          <Text style={styles.details}>{item.details}</Text>
+          <Text style={styles.date}>{item.date}</Text>
+        </View>
+      </View>
+    );
+  };
 
   renderSeparator = () => {
     return (
@@ -149,16 +185,16 @@ export default class PaymentsScreen extends Component {
           )
     }
     return (
-      <List>
       <FlatList
         data={this.state.data}
+        extraData={this.state}  
         renderItem={this.renderItem}
         keyExtractor={item => item.id}
+        ListEmptyComponent={this.renderListEmptyComponent}
         ItemSeparatorComponent={this.renderSeparator}
         ListHeaderComponent={this.renderHeader}
         ListFooterComponent={this.renderFooter}
       />
-    </List>
     );
   }
 }
@@ -166,17 +202,34 @@ export default class PaymentsScreen extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'column',
     backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
-  paragraph: {
-    margin: 24,
-    marginTop: 0,
-    fontSize: 14,
+  row: {
+    padding: 20,
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  rowText: {
+    flex: 1
+  },
+  thumbnail: {
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    marginRight: 10
+  },
+  title: {
     fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#000',
+    paddingRight: 10,
+    color: 'black',
+  },
+  details: {
+    fontSize: 18,
+    color: 'black',
+  },
+  date: {
+    fontSize: 14,
+    color: 'black',
   },
 });
