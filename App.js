@@ -6,13 +6,14 @@
  * @flow
  */
 
-import React, {Fragment} from 'react';
+import React, {Fragment, Component} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
   ScrollView,
   View,
   Text,
+  Dimensions,
   StatusBar,
 } from 'react-native';
 
@@ -24,15 +25,16 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
-import SplashScreen from 'react-native-splash-screen';
+//import SplashScreen from 'react-native-splash-screen';
 
 import MainNavigator from './src/components/screens/Navigations';
 
-class App extends React.Component {
+class App extends Component {
+
   componentDidMount() {
-    setTimeout(() => {
-      SplashScreen.hide();
-    }, 1000);
+    //setTimeout(() => {
+    //  SplashScreen.hide();
+    //}, 1000);
   }
 
   render() {
