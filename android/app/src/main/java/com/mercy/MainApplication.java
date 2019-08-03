@@ -4,16 +4,15 @@ import android.app.Application;
 import android.util.Log;
 
 import com.facebook.react.PackageList;
-import com.facebook.hermes.reactexecutor.HermesExecutorFactory;
+//import com.facebook.hermes.reactexecutor.HermesExecutorFactory;
 import com.facebook.react.bridge.JavaScriptExecutorFactory;
 import com.facebook.react.ReactApplication;
 import com.brentvatne.react.ReactVideoPackage;
-import com.opentokreactnative.OTPackage;
+import cn.nodemedia.react_native_nodemediaclient.NodeMediaReactPackage;
+import com.oblador.vectoricons.VectorIconsPackage;
 import com.reactnativecommunity.asyncstorage.AsyncStoragePackage;
 import com.swmansion.gesturehandler.react.RNGestureHandlerPackage;
-import org.devio.rn.splashscreen.SplashScreenReactPackage;
-import com.oblador.vectoricons.VectorIconsPackage;
-import com.hoxfon.react.RNTwilioVoice.TwilioVoicePackage;  // <--- Import Twilio Package
+//import org.devio.rn.splashscreen.SplashScreenReactPackage;  // <--- Import Twilio Package
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.soloader.SoLoader;
@@ -34,9 +33,9 @@ public class MainApplication extends Application implements ReactApplication {
       List<ReactPackage> packages = new PackageList(this).getPackages();
       // Packages that cannot be autolinked yet can be added manually here, for example:
       // packages.add(new MyReactNativePackage());
-      new SplashScreenReactPackage(); //SplashScreen here
-      new TwilioVoicePackage(false);         // <---- Add the Twilio Package : by default it will ask microphone permissions
-      new RNOpenTokPackage();
+      //packages.add(new TwilioVoicePackage(false)); // <---- Add the Twilio Package : by default it will ask microphone permissions
+      //packages.add(new NodeMediaReactPackage());
+      //new SplashScreenReactPackage(); //SplashScreen here
       return packages;
     }
 
